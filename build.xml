@@ -1,0 +1,116 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<project name="telephone" default="war" basedir=".">
+	<!--
+		===================================================================
+		定义属性（property tasks）
+		最好把用到的路径呀，名称呀都在这里定义成全局变量
+		例：定义
+		<property name="a" value="hello"/>
+		以后就可以这样用它：
+		<property name="b" value="${a}/b"/>
+		现在:b=="hello/b"
+		===================================================================
+	-->
+	<!--主要的系统环境属性-->
+	<property environment="env" />
+	<!--取window,unix...的环境变量-->
+	<property name="java.home" value="${env.JAVA_HOME}" />
+	<!--主要的app环境属性-->
+	<property name="app.name" value="telephone" />
+	<property name="app.jar" value="${app.name}.jar" />
+	<property name="app.war" value="${app.name}.war" />
+	<property name="app.copyright"
+		value=" Copyright (c) 2007 GLOBAL-SAFETY Software Foundation.  All rights reserved." />
+	<!--app中src的属性-->
+	<property name="src.dir" value="src" />
+	<property name="classSavePath" value="web/WEB-INF/classes" />
+	<!--app用到的lib-->
+	<property name="lib.dir" value="web/WEB-INF/lib" />
+	<!--app的build目录中-->
+	<property name="build.dir" value="./output" />
+	<property name="build.classes" value="${build.dir}/classes" />
+	<property name="build.lib" value="web/WEB-INF/lib" />
+	<property name="war.dir" value="${build.dir}/war" />
+	<property name="warsource.dir" value="web" />
+	<!--
+		定义一组路径以后可以通过id重用这组路径 ，例：
+		<javac srcdir="src/main" destdir="build/classes">
+		<classpath refid="classpath"/>
+		</javac>
+	-->
+	<path id="classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+			<include name="*.zip" />
+		</fileset>
+		<fileset dir="${java.home}/lib">
+			<include name="**/*.jar" />
+			<include name="*.zip" />
+		</fileset>
+	</path>
+	<!--
+		===================================================================
+		init 准备目录(File Tasks)
+		主要的目录结构通常是不会变的，一起生成他们
+		===================================================================
+	-->
+	<target name="init">
+		<echo message="环境信息:" />
+		<echo message="JAVA_HOME:${java.home}" />
+		
+		<!--清除以前目录-->
+		<delete dir="${build.dir}" failonerror="false" />
+		<delete dir="${build.classes}" failonerror="false" />
+		<!--准备目录-->
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.classes}" />
+	</target>
+	<!--
+		===================================================================
+		Build the code (Compile Tasks,File Tasks)
+		===================================================================
+	-->
+	<target name="build" depends="init">
+		<!--编译-->
+		<javac srcdir="${src.dir}" destdir="${build.classes}"
+			encoding="UTF-8" fork="true" memoryMaximumSize="1024m">
+			<classpath refid="classpath" />
+		</javac>		
+	</target>
+	<!--
+		===================================================================
+		打包文档(Archive Tasks)
+		Create the project jars: xxx1.jar and xxx2.jar
+		===================================================================
+	-->
+		<target name="jars" depends="build">
+			<echo message="正在打jar包，请稍候..." />
+			<copy todir="${build.classes}" includeemptydirs="false">
+				<fileset dir="${src.dir}">
+					<include name="**/*.properties" />
+					<include name="**/*.xml" />
+					<include name="**/*.xsd" />
+					<include name="**/*.xsl" />
+				</fileset>
+			</copy>
+			<jar basedir="${build.classes}"
+				jarfile="${build.lib}/${app.jar}" />
+		</target>
+	<!--
+		===================================================================
+		打war包
+		===================================================================
+	-->
+	<target name="war" depends="jars" description="生成war包">
+		<echo message="正在打war包，请稍候..." />
+		<war destfile="${build.dir}/${app.war}" encoding="utf-8"
+			webxml="${warsource.dir}/WEB-INF/web.xml">
+			<fileset dir="${warsource.dir}" >
+				<exclude name="build.xml" />
+				<exclude name="**/web.xml" />					
+			</fileset>
+		</war>
+		<echo message="打war包结束" />
+	</target>	
+</project>
+
